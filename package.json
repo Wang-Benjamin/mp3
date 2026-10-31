@@ -9,12 +9,14 @@
     "Sujay Khandekar <khandek2@illinois.edu>"
   ],
   "engines": {
-    "node": ">=24"
+    "node": ">=24 <25"
   },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "submit": "node submit.js"
+    "submit": "node submit.js",
+    "test": "node --test",
+    "test:integration": "node --test test/api.test.js"
   },
   "repository": {
     "type": "git",
