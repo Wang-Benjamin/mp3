@@ -43,8 +43,13 @@ describe('API integration with a real transaction-capable database', {
             headers: headers || (body === undefined ? {} : { 'Content-Type': 'application/json' }),
             body: body === undefined ? undefined : headers ? body : JSON.stringify(body)
         });
-        const json = await response.json();
-        assert.equal(response.status, status, JSON.stringify(json));
+        const text = await response.text();
+        assert.equal(response.status, status, text);
+        if (status === 204) {
+            assert.equal(text, '');
+            return;
+        }
+        const json = JSON.parse(text);
         assert.deepEqual(Object.keys(json).sort(), ['data', 'message']);
         assert.equal(typeof json.message, 'string');
         if (status >= 400) assert.equal(json.data, null);
@@ -231,16 +236,16 @@ describe('API integration with a real transaction-capable database', {
         assert.equal(await request('/tasks?count=true'), 105);
     });
 
-    test('deletions clean pending and completed relationships', async () => {
+    test('deletions return empty 204 responses and clean pending and completed relationships', async () => {
         const owner = await user();
         const value = await task({ assignedUser: owner._id });
         const completed = await task({ assignedUser: owner._id, completed: true });
-        await request(`/tasks/${value._id}`, 'DELETE');
+        await request(`/tasks/${value._id}`, 'DELETE', undefined, 204);
         assert.deepEqual((await request(`/users/${owner._id}`)).pendingTasks, []);
         await request(`/tasks/${value._id}`, 'GET', undefined, 404);
         await request(`/tasks/${value._id}`, 'DELETE', undefined, 404);
         const pending = await task({ assignedUser: owner._id });
-        await request(`/users/${owner._id}`, 'DELETE');
+        await request(`/users/${owner._id}`, 'DELETE', undefined, 204);
         for (const id of [pending._id, completed._id]) assert.equal((await request(`/tasks/${id}`)).assignedUser, '');
         await request(`/users/${owner._id}`, 'GET', undefined, 404);
     });
@@ -337,9 +342,10 @@ describe('API integration with a real transaction-capable database', {
                 body: JSON.stringify({ name: 'Task', deadline, assignedUser: owner._id, completed: true })
             }))
         ]);
-        assert.equal(responses[0].status, 200);
+        assert.equal(responses[0].status, 204);
+        assert.equal(await responses[0].text(), '');
         for (const response of responses.slice(1)) assert.ok([201, 404].includes(response.status));
-        await Promise.all(responses.map(response => response.arrayBuffer()));
+        await Promise.all(responses.slice(1).map(response => response.arrayBuffer()));
         await assertRelationships();
     });
 

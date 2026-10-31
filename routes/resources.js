@@ -33,7 +33,8 @@ module.exports = function resourceRouter(Model, { save, remove, limit = 0 }) {
         res.json({ message: `${Model.modelName} updated.`, data: await save(req.body, isForm(req), req.params.id) });
     });
     router.delete('/:id', async (req, res) => {
-        res.json({ message: `${Model.modelName} deleted.`, data: await remove(req.params.id) });
+        await remove(req.params.id);
+        res.status(204).end();
     });
     return router;
 };

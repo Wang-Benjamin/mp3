@@ -25,8 +25,9 @@ Both `/api/users` and `/api/tasks` support GET and POST. Their `/:id` routes
 support GET, PUT, and DELETE. The assignment README defines the resource fields
 and relationship rules.
 
-- Success uses `200`, or `201` for creation, with `{ "message": "...", "data": ... }`.
-- DELETE returns `200` and the deleted resource's `_id` in `data`.
+- GET and PUT use `200`, and POST uses `201`, with `{ "message": "...", "data": ... }`.
+- Successful DELETE returns `204` with an empty response body, as required by the
+  course autograder. DELETE errors still use the JSON error envelope.
 - Errors use the same envelope with `data: null`; missing resources use `404`,
   invalid input uses `400`, and unexpected failures use `500`.
 - PUT replaces all writable fields. Missing optional fields receive defaults;
